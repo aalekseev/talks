@@ -60,5 +60,4 @@ Best resources out there about testing (specifically python applications):
 ## BIO
 
 I am a fullstack developer at Thorgate - a digital agency
-focused on helping industry companies automate internal processes. I am passionate about testing and making
-writing tests efiicient and part of the daily routine.
+focused on helping industry companies automate internal processes.
