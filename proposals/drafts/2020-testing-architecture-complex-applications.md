@@ -23,27 +23,23 @@ projects.
 
 1. Introduction (2min)
     - About me
-1. Tests structure approaches (5min)
+1. Tests structure approaches (10min)
     - Default Django approach for small applications
     - Tests as a separate python package
     - Dividing tests by type
     - What if we take default Django approach and add gradual division?
-1. PyTest Tips & Tricks (5min)
-    - Sensible settings
-    - Parametrized tests
-    - Fixtures scope
-    - `conftest.py` rule of thumb
-1. Django specific examples (10min)
+1. Risk Based Testing approach (5min)
+    - 100% coverage is not a goal
+    - Indentifying the most crutial parts of the codebase to cover with tests
+1. Working with legacy code (5min)
+    - There is no apps without legacy
+    - Acceptance testing
+1. Easy to implement (there is no reason to skip them) test examples (5min)
     - Testing Models Methods Without DB Access
-    - Testing Admin Classes
     - Testing Forms
     - Testing Permissions
-    - Testing Views
     - Testing Management Commands
     - Testing Celery Tasks
-1. Working with legacy code (5min)
-    - There is no big apps without legacy
-    - Acceptance testing
 1. Conclusion (2min)
     - Brief summary of structure approach
     - Additional resources
