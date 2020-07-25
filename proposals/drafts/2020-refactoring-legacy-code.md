@@ -41,6 +41,8 @@ and give refactoring estimates.
 This talk is based on personal experience and inspired by
 podcast https://www.maintainable.fm
 
+This proposal needs work. From the conference perspective it is super detailed and suited only for a small fraction of the audience.
+
 ## BIO
 
 I am a fullstack developer at Thorgate - a digital agency
