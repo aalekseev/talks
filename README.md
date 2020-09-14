@@ -14,3 +14,14 @@ This is a list of resources that I used to get insperation and examples:
 1. https://github.com/emilyemorehouse/conference-talk-proposals
 1. https://github.com/akaptur/pycon-proposals
 1. https://github.com/jvns/talks/tree/master/proposals
+
+## Slides
+
+The slides are created with [MDX Deck](https://github.com/jxnblk/mdx-deck) library
+that created interactive slides from MDX files - essentially it is a markdown files
+inwhich you can include React components. 
+
+To run slides locally follow these steps:
+
+1. Install node dependencies with `npm i`
+1. Open slides in browser `npm start slides/2020-security-practices-pycon-ee.mdx`
