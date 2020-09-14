@@ -1,0 +1,453 @@
+import { Footer, Notes } from 'mdx-deck'
+import { book, highlight } from '@mdx-deck/themes';
+export const theme = {...book, ...highlight};
+
+<Footer>
+    Anton Alekseev - Security Practices - PyCon Estonia 2020
+</Footer>
+
+# Security Practices
+for Building Django Applications
+
+---
+
+## Anton Alekseev
+
+Tech Lead and Fullstack Developer at Thorgate
+
+@aalekseev
+
+<Notes>
+Hello, I am a full-stack developer at Thorgate - a digital agency
+focused on helping industry companies automate internal processes.
+
+I am not a security professional, just a regular software developer
+who decided to invest time in learning about security of web applications.
+
+At Thorgate the vast majority of the project built on Django.
+Django is a Python web-framework, wich means that you can build sites using Python!
+
+Django is famous to be a secure framework, so does it means that we are done,
+and sites built with Django secure? Let's find out!
+</Notes>
+
+---
+
+## Talk Outline
+
+1. What is security?
+1. Common Security risks in web applications
+1. Modern API vulnerabilities
+1. Tools to help mitigate security risks
+1. Minimal secure website checklist
+1. Thank you!
+
+---
+
+## What is Security?
+
+The big, the scary and the complicated
+
+<Notes>
+Security is a very big and scary topic. But at the same time it is very important to get know about it.
+
+Every day we are reading about database leak, credit card info stolen, emails pawned.
+No system is 100% secure and even big corporations struggle with it.
+Sadly, this is a world that we are living in and as a developers we have a responsibility to protect
+the user data of things that we are building.
+</Notes>
+
+---
+
+## Misconceptions about security
+
+1. It is a job for security professionals
+1. Security is too complex to learn about
+1. My framework will protect me from any security threats
+
+<Notes>
+1. It is a job for security professionals
+    - Security is not just a thing for security experts. Security is a shared responsibility. It is everyone job.
+        - It is responsibility of the staff members, sales, marketing team, to use strong passwords and keep them in password manager,
+            and also be aware about phishing attacks
+        - It is responsibility of the developer to look out for SQL injection, XSS attacks and more
+        - It is responsibility of the engeneering manager to make sure that secure audits are done regularly
+        - It is responsibility of the project manager to decline the changes from the client if it will be a security risk
+1. Security is too complex to learn about
+    - It is, especially cryptography. But at the same time, there are basic steps, if followed, that will make
+        your web application better protected than vast majority of sites. Amature hackers looking for an easy target,
+        and professional hacker will brake your site anyway if you don't have a dedicated InfoSec team.
+1. Yes, from some of them. Your framework will protect you on the start, but as application logic grow,
+    developers will itroduce more vulnerabilities in code and there will be less and less help from the framework itself.
+</Notes>
+
+---
+
+## Security Parts
+
+We won't be talking about:
+
+1. Cryptography
+1. Phishing and other social engeneering practices
+1. Protecting the actual servers from being hacked
+
+We will be talking:
+
+1. Security mindset
+1. How to make your website harder to hack into
+1. How to protect your user's data from being stolen or altered
+
+<Notes>
+phishing - but do cheeck out the previous year Pycon talk about this
+
+This slide/slides is about setting talk expectations.
+Security is a broad topic, and I would like to set here some boundries.
+</Notes>
+
+---
+
+## Common Security risks in web applications
+
+[OWAPS Top 10](https://www.owasp.org/index.php/Category:OWASP_Top_Ten_Project)
+
+<Notes>
+OWASP - Open Web Application Security Project. Nonprofit foundation that works to improve the security of software.
+
+Every year they publish 10 most common security vulnerabilities in Web Applications. Let's look into some of them
+with the prism of Django framework.
+</Notes>
+
+---
+
+## Injection
+
+### What could go wrong?
+
+```python
+user_input = "Anton"
+Customers.objects.raw(f'SELECT * FROM Customers WHERE customer_name = {user_input}')
+```
+
+### Well, this -
+
+```python
+user_input = '"" or 1 = 1;--'
+Customers.objects.raw(f'SELECT * FROM Customers WHERE customer_name = {user_input}')
+```
+
+<Notes>
+This is a number 1 in OWASP top 10, most popular and most dangerous attack.
+The threat is that user with malicious intent can provide a harmful input to the server,
+and server will execute the code on the Database level.
+Any user can read sensible data/modify the data in the database.
+
+In this example we are looking into SQL injection, but it can be URL paramethers, request
+headers, cookies, JSON, XML data inputs.
+</Notes>
+
+---
+
+## Django vs SQL injection
+1. Use Django ORM
+    ```python
+    user_input = '"" or 1 = 1;--'
+    Customers.objects.filter(customer_name=user_input)
+    ```
+1. If you can't - pass argumets instead of formatting the string
+    ```python
+    user_input = '"" or 1 = 1;--'
+    Customers.objects.raw('SELECT * FROM Customers WHERE customer_name = %s', user_input)
+    ```
+
+### Are we secure now?
+
+<Notes>
+Django ORM is your security blanket here, it will sanitize the user input for you.
+However if you provided it with SQL query with user input already there, there is not much Django can do about it.
+
+Using Django ORM might not be possible in some situations - for example
+legacy code with huge 200 lines SQL statement that nobody understands anymore and it was not updated for 5 years.
+In this case it is totally fine to pass user input as paramethers, that way it also will be sanitized and escaped
+by Django and the database.
+
+Are we secure now?
+Well, in most cases - yes.
+Django 2.1.11 - CVE-2019-14234: SQL injection possibility in key and index lookups for JSONField/HStoreField
+</Notes>
+
+---
+
+## XSS
+
+### What could go wrong?
+
+```html
+<div class="user-notes">
+    {{ notes.content | safe }}
+</div>
+```
+
+### Well, this -
+
+```html
+<div class="user-notes">
+   <script>$('h1').text('Security Alert!');</script> 
+</div>
+```
+
+<Notes>
+XSS - is a cross-site scripting attack. It usually targets user browser.
+Typical XSS attacks include session stealing, account takeower, key logging and
+other types of client attacks.
+
+One of the simple XSS examples is un-sanitized user input putted directly into template. 
+</Notes>
+
+---
+
+## Django vs XSS attacks
+
+1. From Django 1.0 - template system by default escapes html code, which mean no executable javascript
+1. Fromt Django 2.1 you can use `json_script` to add JSON safely into template
+1. If you can, use markdown instead of raw HTML to provide users with reach text editor
+1. But other than that - check your templates for user input and if it was marked as safe
+
+### Are we secure now?
+
+<Notes>
+? Needs further research
+</Notes>
+
+---
+
+## Django vs Broken Authentication
+
+Most of the things Django authentication framework will do for you (if you will use it).
+But there is extra work to cover the basics:
+
+- Serve your site over HTTPS
+- `SESSION_COOKIE_HTTPONLY` needs to be ON, to make stealing cookie with session ID harder
+- Never expose a session ID outside protected cookies (especially in GET requests)
+- Use password validation (build in Django from version 1.9) to preven usage of weak and well-known passwords
+- If possible use 2FA
+
+### Are we safe now?
+
+<Notes>
+**A candidate for removal**
+
+Sometimes django applications use different types of authentication for client site and API layer.
+You need to make sure that Token based authentication for API requests is following the basic
+security practices as well and try not to use Basic Authentication
+(authentication when you pass username in passowrd almost in plain text) for API if possible.
+</Notes>
+
+---
+
+## Django vs Sensitive data exposure
+Django nor any automated tool can protect you from making mistakes here.
+However these basic things can help:
+
+- Carefuly decide what data will be exposed in API
+- Mask the data in the API if possible
+- Don't store sensitive data "just in case"
+- Make sure that if you are collecting sensitive data it is encrypted
+- All sensitive data should be transmitted only via secure connection
+- Disable caching for responses that contain sensitive data
+
+### Are we safe now?
+
+<Notes>
+Quite often web-applications will expose in the API endpoints real people/company
+sensitive data such as health records, home addresses, phone numbers.
+
+This is common in:
+- DB
+- Log files on the server
+- Error Tracebacks
+
+Nope. A regular security check to ensure that data exposed in API is protected is required.
+</Notes>
+
+---
+
+## Django vs Broken Access Control
+
+Django provides these helpers:
+- For functional views `django.contrib.auth.decorators`:
+    - `login_required`
+    - `permission_required`
+    - `user_passes_test` (generic function that receieves a user and returns boolean)
+- For class-based views `django.contrib.auth.mixins`:
+    - `LoginRequiredMixin`
+    - `PermissionRequiredMixin`
+    - `UserPassesTestMixin`
+- You can also control which HTTP methods are permitted on a view
+    - For functional views `django.views.decorators.http`:
+        - `require_GET`, `require_POST`, `require_http_methods`, `require_safe`
+    - For class-based views
+        - `http_method_names` attribute
+
+### Are we safe now?
+
+<Notes>
+Another common security pitfal is checking that user is authorized,
+but never checking that user has permission to view/modify the data
+
+Django provides listed helper functions, but properly applying them and
+making a testing users permissions on a regular basis is a job of developers.
+</Notes>
+
+---
+
+## Django vs Security misconfiguration
+
+```
+MONTH_DAY_FORMAT 	'F j'
+NETLIFY_CRED 	'password123'
+NETLIFY_USER 	'@aalekseev'
+NUMBER_GROUPING 	0
+PASSWORD_HASHERS 	'********************'
+PASSWORD_RESET_TIMEOUT 	'********************'
+PASSWORD_RESET_TIMEOUT_DAYS 	'********************'
+PREPEND_WWW 	False
+ROOT_URLCONF 	'vulnerable.urls'
+SECRET_KEY 	'********************'
+SECURE_BROWSER_XSS_FILTER 	False
+```
+
+### Are we safe now?
+
+<Notes>
+This is an example of improper configuration.
+
+When you work with Django locally, to improve developer experience, on exception in the code
+django will render a page with all the settings of the project and detailed traceback.
+
+But what will be if we forgot to turn off development setting on deployed to production site?
+
+The user is able to see a lot of information about the system. The good thing is that Django
+applies a few rules to identify the sesible data like passwords to third party services in the settings
+and mask them so they won't leak to debug page, application logs and error tracebacks.
+
+However rules can't account for every usecase, and you can easily expose password to third party provider.
+</Notes>
+
+---
+
+## Beyond OWASP top 10
+
+The things that OWASP top 10 won't teach you about
+
+1. Cache poisoning
+1. DNS rebinding
+1. Content sniffing
+1. Cryptography, SSL
+1. Malicious uses of Unicode and ASCII
+1. Timing and other side-channel attacks
+1. Many more
+
+<Notes>
+OWASP to 10 is a good starting point, and dealing with most common issues
+is important, but there is a lot more to the vulnerabilities.
+</Notes>
+
+---
+
+## Modern API vulnerabilities
+
+- JWT manipulation
+    - Validate using unique ID
+    - Ensure JWT implementation does not support 'None' signature
+    - JWT lifetime relatively short
+    - check library flaw
+- Insecure deserialization
+    - integrate integrity check
+    - isolate, then deserialize the data
+    - monitor incoming and outgoing network ocnnectivity
+    - instead of `yaml.load` use `yaml.safe_load`
+- Insecure direct object reference
+    - validate user using requested query
+    - check database is that user genue or not
+    - custom validation in server side as well as client side
+    - JWT should be invalidated once user is loged out
+- Server-side template injection
+
+<Notes>
+Ugh this is super important but currently missing!
+</Notes>
+
+---
+
+## Tools
+
+- [Mozilla Observatory](https://observatory.mozilla.org/)
+- [OWASP ZAP](https://www.zaproxy.org/)
+- [Pycharm Python security plugin](https://pycharm-security.readthedocs.io/en/latest/)
+- [Pipenv check](https://pipenv.pypa.io/en/latest/advanced/#detection-of-security-vulnerabilities)
+- [Bandit](https://github.com/PyCQA/bandit)
+- [Django-security app](https://github.com/sdelements/django-security)
+- [Django defender](https://github.com/jazzband/django-defender)
+- [Django CSP](https://github.com/mozilla/django-csp)
+
+<Notes>
+- Mozilla Observatory
+    - Automatic tool that checks cookies, and request headers and a few other cheecks
+- OWASP ZAP
+    - This is an attack proxy. It sits between browser and application, intercepts requests, analyzes it for vulnerabilities and puts a report
+        with links to OWASP documentation
+- Pycharm python security plugin
+    - The plugin looks at your Python code for common security vulnerabilities and suggests fixes. This is all-purpose plugin, not only for web-developers
+    - It can automatically check with some extent for SQL injection, XSS and misconfiguration
+- Pipenv check
+    - If you are using Pipenv to lock project dependencies, it provides a command to check your dependencies graph and check for vulnerabilities in package versions
+- Bandit
+    - A tool that checks for security vulnerabilities and reports commited secrects, using raw SQL in Django but also lots of all-purpose security checks
+- Django security app
+    - Provides number of models, views, middlewares and forms to facilitate security hardening of Django applications.
+- Django defender
+    - A simple Django reusable app that blocks people from brute forcing login attempts.
+- Django CSP
+    - Add content security policy - aloowing to speciafy from where exactly your site is allowed to load any media, static and javascript files
+</Notes>
+
+---
+
+## Minimal secure website checklist
+
+1. HTTPS (for everything)
+1. DEBUG is off by default (part of Django deploy checklist)
+1. SECRET_KEY commited to the repository
+1. Django check framework and particularly `manage.py check --deploy`
+1. Change default admin url (this will not protect you from hackers, but it will make it harder)
+1. Django version updated to the latest minor version
+1. Don't ever trust user input and validate it all the time
+    - Don't put user input directly into templates, SQL code or URL (ugh!!) 
+1. Don't trust staff members to select secure passwords, add 2FA for admin site
+1. Check not only that user can access the resource but also that they have rights to see/modify it
+1. Do regular security checks with all the tools mentioned previously
+1. serve static and media files from a cloud service or CDN (or you need to make complex steps to limit uploading size, to prevent DDoS, )
+
+<Notes>
+Easy to follow steps/checklist to start thinking about security (Key takeaways from the talk)
+</Notes>
+
+---
+
+## Additional Resources
+
+- [The Open Web Application Security Project OWAPSP](https://owasp.org/www-project-top-ten/OWASP_Top_Ten_2017/)
+- [Django security docs](https://docs.djangoproject.com/en/3.1/topics/security/)
+
+---
+
+## Thank you!
+
+People who made this talk possible by actively talking about security
+on various conferences:
+
+- Jacinda Shelly
+- Jacob Kaplan-Moss
+- James Bennett
+- Philip James
+- Red and Black Tech

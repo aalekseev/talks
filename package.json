@@ -1,0 +1,28 @@
+{
+  "name": "talks",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Repository for conference talks",
+  "scripts": {
+    "start": "mdx-deck"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aalekseev/talks.git"
+  },
+  "keywords": [
+    "mdx",
+    "slides",
+    "talks"
+  ],
+  "author": "Anton Alekseev",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/aalekseev/talks/issues"
+  },
+  "homepage": "https://github.com/aalekseev/talks#readme",
+  "devDependencies": {
+    "@mdx-deck/themes": "^4.1.0",
+    "mdx-deck": "^4.1.1"
+  }
+}
